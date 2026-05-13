@@ -1,8 +1,4 @@
 /*
-Kreirati GET metodu getdatum koja će vraćati trenutni datum i sat
-Pozvati metodu preko RESTED klijenta
-
-U bazi:
 CREATE TABLE knjiga(
     id int(11) primary key AUTO_INCREMENT, 
     naslov varchar(100), 
@@ -14,17 +10,18 @@ INSERT INTO knjiga(naslov, autor, slika) VALUES("Violinistica","Harriet Constabl
 const express = require('express');
 const bodyParser = require('body-parser');
 const mysql = require("mysql");
-
+const cors = require('cors');
 const app = express();
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(cors({origin: '*'}))
 
 const connection = {
-    host:"xxx",
-    database:"xxx",
-    user:"xxx",
-    password:"xxx"
+    host:"***",
+    database:"***",
+    user:"***",
+    password:"***"
 }
 conn = mysql.createConnection(connection);
 
@@ -41,8 +38,28 @@ app.post('/addknjiga', (request, response) => {
     const data = request.body;
     console.log(data.autor);
     console.log(data.naslov);
-    return response.send('POST metoda -> Add '+data.autor+" "+data.naslov);
+    knjiga = [data.naslov, data.autor, data.slika];
+    conn.query("INSERT INTO knjiga(naslov, autor, slika) VALUES(?,?,?)", knjiga, (error, results) => {
+        if (error) {
+            console.log(error)
+        }
+        return response.send(results);
+    })
 });
+
+app.post('/rezervacija/:id_knjige/:id_korisnika', (request, response) => {
+    const id_knjige = request.params.id_knjige;
+    const id_korisnika = request.params.id_korisnika;
+    const datum = request.body.datum;
+    conn.query("INSERT INTO `rezervacija`(`datum_rez`,`id_knjige`,`id_korisnika`) VALUES (?,?,?)", [datum, id_knjige, id_korisnika], 
+        (error, results) => {
+        if (error) {
+            console.log(error)
+        }
+        return response.send(results);
+    })
+});
+
 app.put('/updateknjiga', (request, response) => {
     const data = request.body;
     console.log(data.autor);
@@ -57,11 +74,7 @@ app.delete('/deleteknjiga', (request, response) => {
 app.get('/hello', (request, response) => {
     return response.send('Hello world');
 });
-app.get('/getdatum', (request, response) => {
-    let datum ='13.11.2025'
-    console.log(datum);
-    return response.send('datum '+datum);
-});
+
 app.listen(3000, () => {
     console.log("Server running on port 3000");
 });
